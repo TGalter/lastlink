@@ -3,7 +3,7 @@ namespace AdvanceRequests.Domain.Exceptions;
 public sealed class InvalidAdvanceRequestAmountException : DomainException
 {
     public InvalidAdvanceRequestAmountException(decimal amount)
-        : base($"The requested amount must be greater than 100. Provided amount: {amount}.")
+        : base($"O valor solicitdo deve ser maior que 100. Valor fornecido: {amount}.")
     {
     }
 }

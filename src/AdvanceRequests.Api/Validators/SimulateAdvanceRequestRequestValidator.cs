@@ -9,6 +9,6 @@ public sealed class SimulateAdvanceRequestRequestValidator : AbstractValidator<S
     {
         RuleFor(x => x.Amount)
             .GreaterThan(0)
-            .WithMessage("Amount must be greater than zero.");
+            .WithMessage("O valor deve ser maior que zero.");
     }
 }

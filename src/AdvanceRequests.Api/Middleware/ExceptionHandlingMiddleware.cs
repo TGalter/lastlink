@@ -24,7 +24,7 @@ public sealed class ExceptionHandlingMiddleware
 
             await context.Response.WriteAsJsonAsync(new
             {
-                error = "Validation failed",
+                error = "Falha na validação.",
                 details = ex.Errors.Select(x => new
                 {
                     field = x.PropertyName,
@@ -47,7 +47,7 @@ public sealed class ExceptionHandlingMiddleware
 
             await context.Response.WriteAsJsonAsync(new
             {
-                error = "Internal server error"
+                error = "Erro interno no servidor."
             });
         }
     }

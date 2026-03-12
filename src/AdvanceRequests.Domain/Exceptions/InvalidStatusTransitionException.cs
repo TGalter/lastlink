@@ -5,7 +5,7 @@ namespace AdvanceRequests.Domain.Exceptions;
 public sealed class InvalidStatusTransitionException : DomainException
 {
     public InvalidStatusTransitionException(AdvanceRequestStatus current, AdvanceRequestStatus target)
-        : base($"Invalid status transition from {current} to {target}.")
+        : base($"Transição de status inválida de {current} para {target}.")
     {
     }
 }
