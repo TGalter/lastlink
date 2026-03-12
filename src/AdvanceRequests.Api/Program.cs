@@ -1,12 +1,18 @@
 using AdvanceRequests.Api.Extensions;
 using AdvanceRequests.Api.Middleware;
+using AdvanceRequests.Api.Validators;
 using AdvanceRequests.Infrastructure;
 using AdvanceRequests.Infrastructure.Persistence;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateAdvanceRequestCommandValidator>();
 
 builder.Services.AddOpenApi();
 
@@ -27,10 +33,15 @@ app.UseSwaggerUI(options =>
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.IsEnvironment("Testing"))
 {
+    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.Migrate();
 }
 
 app.Run();
+
+public partial class Program
+{
+}

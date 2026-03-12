@@ -1,5 +1,5 @@
 using AdvanceRequests.Domain.Exceptions;
-using System.Text.Json;
+using FluentValidation;
 
 namespace AdvanceRequests.Api.Middleware;
 
@@ -18,9 +18,23 @@ public sealed class ExceptionHandlingMiddleware
         {
             await _next(context);
         }
+        catch (ValidationException ex)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+            await context.Response.WriteAsJsonAsync(new
+            {
+                error = "Validation failed",
+                details = ex.Errors.Select(x => new
+                {
+                    field = x.PropertyName,
+                    message = x.ErrorMessage
+                })
+            });
+        }
         catch (DomainException ex)
         {
-            context.Response.StatusCode = 400;
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
 
             await context.Response.WriteAsJsonAsync(new
             {
@@ -29,7 +43,7 @@ public sealed class ExceptionHandlingMiddleware
         }
         catch (Exception)
         {
-            context.Response.StatusCode = 500;
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
             await context.Response.WriteAsJsonAsync(new
             {

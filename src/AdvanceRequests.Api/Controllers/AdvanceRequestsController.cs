@@ -1,3 +1,4 @@
+using AdvanceRequests.Api.Contracts.AdvanceRequests;
 using AdvanceRequests.Application.Features.AdvanceRequests.ApproveAdvanceRequest;
 using AdvanceRequests.Application.Features.AdvanceRequests.CreateAdvanceRequest;
 using AdvanceRequests.Application.Features.AdvanceRequests.GetAdvanceRequestSimulation;
@@ -13,10 +14,16 @@ public sealed class AdvanceRequestsController : ControllerBase
 {
     [HttpPost]
     public async Task<IActionResult> Create(
-        [FromBody] CreateAdvanceRequestCommand command,
+        [FromBody] CreateAdvanceRequestRequest request,
         [FromServices] CreateAdvanceRequestHandler handler,
         CancellationToken cancellationToken)
     {
+        var command = new CreateAdvanceRequestCommand
+        {
+            CreatorId = request.CreatorId,
+            GrossAmount = request.GrossAmount
+        };
+
         var result = await handler.Handle(command, cancellationToken);
 
         return Ok(result.Value);
@@ -66,12 +73,12 @@ public sealed class AdvanceRequestsController : ControllerBase
 
     [HttpGet("simulate")]
     public IActionResult Simulate(
-        [FromQuery] decimal amount,
+        [FromQuery] SimulateAdvanceRequestRequest request,
         [FromServices] GetAdvanceRequestSimulationHandler handler)
     {
         var result = handler.Handle(new GetAdvanceRequestSimulationQuery
         {
-            GrossAmount = amount
+            GrossAmount = request.Amount
         });
 
         return Ok(result.Value);
