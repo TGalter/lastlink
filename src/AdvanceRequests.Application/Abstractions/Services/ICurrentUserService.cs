@@ -1,7 +1,8 @@
 namespace AdvanceRequests.Application.Abstractions.Services;
-
 public interface ICurrentUserService
 {
-    string UserId { get; }
-    string Role { get; }
+    bool IsAuthenticated { get; }
+    string? Role { get; }
+    Guid? UserId { get; }
+    Guid? CreatorId { get; }
 }

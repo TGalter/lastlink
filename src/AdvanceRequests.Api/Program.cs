@@ -1,44 +1,31 @@
 using AdvanceRequests.Api.Extensions;
 using AdvanceRequests.Api.Middleware;
-using AdvanceRequests.Api.Validators;
 using AdvanceRequests.Infrastructure;
-using AdvanceRequests.Infrastructure.Persistence;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateAdvanceRequestCommandValidator>();
-
-builder.Services.AddOpenApi();
-
+builder.Services.AddApiBehaviorConfiguration();
+builder.Services.AddApiValidation();
+builder.Services.AddApiVersioningConfiguration();
+builder.Services.AddApiDocumentation();
 builder.Services.AddApplicationHandlers();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-app.MapOpenApi();
+app.UseApiDocumentation();
 
-app.UseSwaggerUI(options =>
-{
-    options.SwaggerEndpoint("/openapi/v1.json", "Advance Requests API");
-});
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
-if (!app.Environment.IsEnvironment("Testing"))
-{
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate();
-}
+app.ApplyMigrations();
 
 app.Run();
 

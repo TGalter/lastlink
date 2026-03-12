@@ -19,7 +19,32 @@ public sealed class ListAdvanceRequestsHandler
     {
         var items = await _repository.ListAsync(cancellationToken);
 
-        var result = items
+        var filtered = items.AsQueryable();
+
+        if (query.IsAdmin)
+        {
+            if (query.CreatorId.HasValue)
+                filtered = filtered.Where(x => x.CreatorId == query.CreatorId.Value);
+        }
+        else
+        {
+            if (!query.RequestingCreatorId.HasValue)
+                return Result<IReadOnlyList<AdvanceRequestDto>>.Failure("CreatorId do usuário autenticado não encontrado.");
+
+            filtered = filtered.Where(x => x.CreatorId == query.RequestingCreatorId.Value);
+        }
+
+        if (query.Status.HasValue)
+            filtered = filtered.Where(x => x.Status == query.Status.Value);
+
+        if (query.FromDate.HasValue)
+            filtered = filtered.Where(x => x.RequestedAtUtc >= query.FromDate.Value);
+
+        if (query.ToDate.HasValue)
+            filtered = filtered.Where(x => x.RequestedAtUtc <= query.ToDate.Value);
+
+        var result = filtered
+            .OrderByDescending(x => x.RequestedAtUtc)
             .Select(x => new AdvanceRequestDto
             {
                 Id = x.Id,
