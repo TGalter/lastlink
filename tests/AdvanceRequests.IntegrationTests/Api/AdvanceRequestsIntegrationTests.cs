@@ -24,10 +24,12 @@ public sealed class AdvanceRequestsIntegrationTests
     public async Task Simulate_Should_ReturnExpectedValues_WhenAmountIsValid()
     {
         var response = await _client.GetAsync("/api/v1/advance-requests/simulate?amount=1000");
+        var body = await response.Content.ReadAsStringAsync();
+
+        Console.WriteLine(body);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var body = await response.Content.ReadAsStringAsync();
         body.Should().Contain("1000");
         body.Should().Contain("50");
         body.Should().Contain("950");

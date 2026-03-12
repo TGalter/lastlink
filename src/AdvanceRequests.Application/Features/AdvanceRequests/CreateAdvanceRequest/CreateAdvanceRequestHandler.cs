@@ -1,3 +1,4 @@
+using AdvanceRequests.Application.Abstractions.Dispatching;
 using AdvanceRequests.Application.Abstractions.Messaging;
 using AdvanceRequests.Application.Abstractions.Persistence;
 using AdvanceRequests.Application.Common;
@@ -7,7 +8,7 @@ using AdvanceRequests.Domain.Exceptions;
 
 namespace AdvanceRequests.Application.Features.AdvanceRequests.CreateAdvanceRequest;
 
-public sealed class CreateAdvanceRequestHandler
+public sealed class CreateAdvanceRequestHandler : ICommandHandler<CreateAdvanceRequestCommand, AdvanceRequestDto>
 {
     private readonly IAdvanceRequestRepository _repository;
     private readonly IUnitOfWork _unitOfWork;

@@ -1,5 +1,3 @@
-
-using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 
 namespace AdvanceRequests.Api.Extensions;

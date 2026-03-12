@@ -1,14 +1,16 @@
+using Asp.Versioning;
 using AdvanceRequests.Api.Contracts.AdvanceRequests;
+using AdvanceRequests.Application.Abstractions.Dispatching;
+using AdvanceRequests.Application.Abstractions.Services;
+using AdvanceRequests.Application.DTOs;
 using AdvanceRequests.Application.Features.AdvanceRequests.ApproveAdvanceRequest;
 using AdvanceRequests.Application.Features.AdvanceRequests.CreateAdvanceRequest;
 using AdvanceRequests.Application.Features.AdvanceRequests.GetAdvanceRequestSimulation;
 using AdvanceRequests.Application.Features.AdvanceRequests.ListAdvanceRequests;
 using AdvanceRequests.Application.Features.AdvanceRequests.RejectAdvanceRequest;
-using Microsoft.AspNetCore.Mvc;
-using Asp.Versioning;
-using Microsoft.AspNetCore.Authorization;
-using AdvanceRequests.Application.Abstractions.Services;
 using AdvanceRequests.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AdvanceRequests.Api.Controllers;
 
@@ -18,39 +20,52 @@ namespace AdvanceRequests.Api.Controllers;
 [Authorize]
 public sealed class AdvanceRequestsController : ControllerBase
 {
+    private readonly ICommandDispatcher _commandDispatcher;
+    private readonly IQueryDispatcher _queryDispatcher;
+    private readonly ICurrentUserService _currentUser;
+
+    public AdvanceRequestsController(
+        ICommandDispatcher commandDispatcher,
+        IQueryDispatcher queryDispatcher,
+        ICurrentUserService currentUser)
+    {
+        _commandDispatcher = commandDispatcher;
+        _queryDispatcher = queryDispatcher;
+        _currentUser = currentUser;
+    }
+
     [HttpPost]
     [Authorize(Roles = "Creator")]
     public async Task<IActionResult> Create(
-    [FromBody] CreateAdvanceRequestRequest request,
-    [FromServices] CreateAdvanceRequestHandler handler,
-    [FromServices] ICurrentUserService currentUser,
-    CancellationToken cancellationToken)
+        [FromBody] CreateAdvanceRequestRequest request,
+        CancellationToken cancellationToken)
     {
-        if (!currentUser.CreatorId.HasValue)
-        {
+        if (!_currentUser.CreatorId.HasValue)
             return Unauthorized(new { erro = "Token do creator inválido." });
-        }
 
         var command = new CreateAdvanceRequestCommand
         {
-            CreatorId = currentUser.CreatorId.Value,
+            CreatorId = _currentUser.CreatorId.Value,
             GrossAmount = request.GrossAmount
         };
 
-        var result = await handler.Handle(command, cancellationToken);
+        var result = await _commandDispatcher.DispatchAsync<CreateAdvanceRequestCommand, AdvanceRequestDto>(
+            command,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(new { erro = result.Error });
 
         return Ok(result.Value);
     }
 
     [HttpGet]
     public async Task<IActionResult> List(
-    [FromQuery] AdvanceRequestStatus? status,
-    [FromQuery] DateTime? fromDate,
-    [FromQuery] DateTime? toDate,
-    [FromQuery] Guid? creatorId,
-    [FromServices] ListAdvanceRequestsHandler handler,
-    [FromServices] ICurrentUserService currentUser,
-    CancellationToken cancellationToken)
+        [FromQuery] AdvanceRequestStatus? status,
+        [FromQuery] DateTime? fromDate,
+        [FromQuery] DateTime? toDate,
+        [FromQuery] Guid? creatorId,
+        CancellationToken cancellationToken)
     {
         var query = new ListAdvanceRequestsQuery
         {
@@ -58,11 +73,13 @@ public sealed class AdvanceRequestsController : ControllerBase
             FromDate = fromDate,
             ToDate = toDate,
             CreatorId = creatorId,
-            IsAdmin = string.Equals(currentUser.Role, "Admin", StringComparison.OrdinalIgnoreCase),
-            RequestingCreatorId = currentUser.CreatorId
+            IsAdmin = string.Equals(_currentUser.Role, "Admin", StringComparison.OrdinalIgnoreCase),
+            RequestingCreatorId = _currentUser.CreatorId
         };
 
-        var result = await handler.Handle(query, cancellationToken);
+        var result = await _queryDispatcher.DispatchAsync<ListAdvanceRequestsQuery, IReadOnlyList<AdvanceRequestDto>>(
+            query,
+            cancellationToken);
 
         if (result.IsFailure)
             return BadRequest(new { erro = result.Error });
@@ -72,48 +89,55 @@ public sealed class AdvanceRequestsController : ControllerBase
 
     [HttpPost("{id}/approve")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Approve(
-        Guid id,
-        [FromServices] ApproveAdvanceRequestHandler handler,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> Approve(Guid id, CancellationToken cancellationToken)
     {
         var command = new ApproveAdvanceRequestCommand
         {
             AdvanceRequestId = id
         };
 
-        await handler.Handle(command, cancellationToken);
+        var result = await _commandDispatcher.DispatchAsync(command, cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(new { erro = result.Error });
 
         return NoContent();
     }
 
     [HttpPost("{id}/reject")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Reject(
-        Guid id,
-        [FromServices] RejectAdvanceRequestHandler handler,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> Reject(Guid id, CancellationToken cancellationToken)
     {
         var command = new RejectAdvanceRequestCommand
         {
             AdvanceRequestId = id
         };
 
-        await handler.Handle(command, cancellationToken);
+        var result = await _commandDispatcher.DispatchAsync(command, cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(new { erro = result.Error });
 
         return NoContent();
     }
 
     [AllowAnonymous]
     [HttpGet("simulate")]
-    public IActionResult Simulate(
-            [FromQuery] SimulateAdvanceRequestRequest request,
-            [FromServices] GetAdvanceRequestSimulationHandler handler)
+    public async Task<IActionResult> Simulate(
+        [FromQuery] SimulateAdvanceRequestRequest request,
+        CancellationToken cancellationToken)
     {
-        var result = handler.Handle(new GetAdvanceRequestSimulationQuery
+        var query = new GetAdvanceRequestSimulationQuery
         {
             GrossAmount = request.Amount
-        });
+        };
+
+        var result = await _queryDispatcher.DispatchAsync<GetAdvanceRequestSimulationQuery, AdvanceRequestSimulationDto>(
+            query,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(new { erro = result.Error });
 
         return Ok(result.Value);
     }

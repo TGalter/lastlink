@@ -1,11 +1,11 @@
 using AdvanceRequests.Application.Abstractions.Messaging;
 using AdvanceRequests.Application.Abstractions.Persistence;
 using AdvanceRequests.Application.Common;
-using AdvanceRequests.Domain.Exceptions;
+using AdvanceRequests.Application.Abstractions.Dispatching;
 
 namespace AdvanceRequests.Application.Features.AdvanceRequests.ApproveAdvanceRequest;
 
-public sealed class ApproveAdvanceRequestHandler
+public sealed class ApproveAdvanceRequestHandler : ICommandHandler<ApproveAdvanceRequestCommand>
 {
     private readonly IAdvanceRequestRepository _repository;
     private readonly IUnitOfWork _unitOfWork;

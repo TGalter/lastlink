@@ -1,10 +1,11 @@
 using AdvanceRequests.Application.Abstractions.Persistence;
 using AdvanceRequests.Application.Common;
 using AdvanceRequests.Application.DTOs;
+using AdvanceRequests.Application.Abstractions.Dispatching;
 
 namespace AdvanceRequests.Application.Features.AdvanceRequests.ListAdvanceRequests;
 
-public sealed class ListAdvanceRequestsHandler
+    public sealed class ListAdvanceRequestsHandler: IQueryHandler<ListAdvanceRequestsQuery, IReadOnlyList<AdvanceRequestDto>>
 {
     private readonly IAdvanceRequestRepository _repository;
 

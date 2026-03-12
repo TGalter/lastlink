@@ -1,8 +1,10 @@
+using AdvanceRequests.Application.Abstractions.Dispatching;
+using AdvanceRequests.Application.DTOs;
 using AdvanceRequests.Domain.Enums;
 
 namespace AdvanceRequests.Application.Features.AdvanceRequests.ListAdvanceRequests;
 
-public sealed class ListAdvanceRequestsQuery
+public sealed class ListAdvanceRequestsQuery : IQuery<IReadOnlyList<AdvanceRequestDto>>
 {
     public Guid? CreatorId { get; init; }
     public AdvanceRequestStatus? Status { get; init; }

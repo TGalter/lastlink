@@ -1,10 +1,11 @@
 using AdvanceRequests.Application.Abstractions.Messaging;
 using AdvanceRequests.Application.Abstractions.Persistence;
 using AdvanceRequests.Application.Common;
+using AdvanceRequests.Application.Abstractions.Dispatching;
 
 namespace AdvanceRequests.Application.Features.AdvanceRequests.RejectAdvanceRequest;
 
-public sealed class RejectAdvanceRequestHandler
+public sealed class RejectAdvanceRequestHandler : ICommandHandler<RejectAdvanceRequestCommand>
 {
     private readonly IAdvanceRequestRepository _repository;
     private readonly IUnitOfWork _unitOfWork;

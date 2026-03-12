@@ -9,10 +9,10 @@ public sealed class CreateAdvanceRequestCommandValidator : AbstractValidator<Cre
     {
         RuleFor(x => x.CreatorId)
             .NotEmpty()
-            .WithMessage("CreatorId is required.");
+            .WithMessage("O identificador do criador é obrigatório.");
 
         RuleFor(x => x.GrossAmount)
-            .GreaterThan(0)
-            .WithMessage("GrossAmount must be greater than zero.");
+            .GreaterThan(100)
+            .WithMessage("O valor bruto deve ser maior que 100.");
     }
 }
