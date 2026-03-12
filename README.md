@@ -2,7 +2,7 @@
 
 API para gerenciamento de **solicitações de adiantamento financeiro**, desenvolvida como solução para um desafio técnico backend.
 
-O projeto foi construído utilizando **.NET 10**, **Clean Architecture**, **Domain Driven Design**, **mensageria com RabbitMQ** e o padrão **Transactional Outbox** para garantir consistência entre persistência e eventos.
+O projeto foi implementado utilizando **.NET 10**, **Clean Architecture**, **CQRS (Command/Query Dispatcher)**, **mensageria com RabbitMQ** e o padrão **Transactional Outbox** para garantir consistência entre persistência e publicação de eventos.
 
 ---
 
@@ -34,7 +34,7 @@ Contém:
 * Regras de negócio
 * Exceptions de domínio
 
-Essa camada não possui dependências externas.
+Essa camada não possui dependência de frameworks.
 
 ---
 
@@ -42,12 +42,12 @@ Essa camada não possui dependências externas.
 
 Contém:
 
-* Casos de uso
-* Commands e Queries
+* Commands
+* Queries
 * Handlers
 * DTOs
-* Interfaces de repositórios
-* Serviços de aplicação
+* Abstrações de repositórios
+* Dispatcher CQRS (CommandDispatcher / QueryDispatcher)
 
 Responsável por orquestrar o domínio.
 
@@ -60,8 +60,8 @@ Implementa:
 * Persistência com **Entity Framework Core**
 * Repositórios
 * Integração com **RabbitMQ**
-* **Outbox Pattern**
-* Background Worker responsável por publicar eventos
+* Implementação do **Outbox Pattern**
+* Worker responsável por publicar eventos
 
 ---
 
@@ -70,10 +70,11 @@ Implementa:
 Responsável por:
 
 * Controllers
-* Validação de entrada
+* Validação com **FluentValidation**
 * Autenticação JWT
+* Versionamento de API
+* Swagger
 * Middlewares
-* Swagger / OpenAPI
 
 ---
 
@@ -100,11 +101,12 @@ AdvanceRequests API
 
 Fluxo:
 
-1. Cliente envia requisição para API
-2. API salva dados no banco
-3. Evento é salvo na tabela **Outbox**
-4. Worker lê a tabela Outbox
-5. Evento é publicado no RabbitMQ
+1. Cliente envia requisição
+2. API executa regras de negócio
+3. Dados são persistidos no banco
+4. Evento é salvo na tabela **Outbox**
+5. Worker lê a Outbox
+6. Evento é publicado no RabbitMQ
 
 ---
 
@@ -119,6 +121,7 @@ Fluxo:
 * JWT Authentication
 * Docker
 * Docker Compose
+* Swagger
 * xUnit
 * FluentAssertions
 
@@ -128,12 +131,19 @@ Fluxo:
 
 ## Clean Architecture
 
-A separação em camadas permite:
+Separação clara de responsabilidades entre camadas, permitindo:
 
-* isolamento do domínio
+* baixo acoplamento
 * facilidade de testes
 * independência de frameworks
-* evolução do sistema sem acoplamento
+
+---
+
+## CQRS com Dispatcher
+
+Foi implementado um **CommandDispatcher** e **QueryDispatcher**, permitindo que os controllers não dependam diretamente dos handlers da camada de aplicação.
+
+Isso mantém os controllers mais limpos e reduz acoplamento.
 
 ---
 
@@ -141,7 +151,7 @@ A separação em camadas permite:
 
 Evita inconsistência entre banco e eventos.
 
-Sem esse padrão, poderiam ocorrer cenários como:
+Sem esse padrão poderiam ocorrer cenários como:
 
 1. salvar no banco
 2. falhar ao publicar evento
@@ -151,32 +161,36 @@ ou
 1. publicar evento
 2. falhar ao salvar no banco
 
-O Outbox resolve esse problema garantindo consistência.
+O Outbox garante consistência.
 
 ---
 
-## JWT simplificado
+## Autenticação simplificada
 
-Para o desafio foi implementado um mecanismo de autenticação JWT
-sem persistência de usuários.
+Para facilitar execução local e testes, foi implementado um endpoint de login que gera tokens JWT simulando usuários:
 
-Isso permite simular diferentes papéis:
+* Admin
+* Creator
 
-* **Admin**
-* **Creator**
+Não há persistência de usuários.
 
-Durante execução local e testes.
+---
+
+# Versionamento da API
+
+A API utiliza **versionamento por segmento de URL**.
+
+Exemplo:
+
+```
+/api/v1/advance-requests
+```
 
 ---
 
 # Autenticação
 
 A API utiliza **JWT Bearer Authentication**.
-
-Não existe persistência de usuários.
-O endpoint de autenticação apenas gera tokens para simulação de papéis.
-
----
 
 ## Endpoint de login
 
@@ -202,8 +216,6 @@ POST /api/v1/auth/login
   "creatorId": "11111111-1111-1111-1111-111111111111"
 }
 ```
-
----
 
 Resposta:
 
@@ -266,10 +278,14 @@ Resposta:
 
 ## Criar solicitação
 
-Requer autenticação **Creator**.
-
 ```
 POST /api/v1/advance-requests
+```
+
+Header:
+
+```
+Authorization: Bearer TOKEN_CREATOR
 ```
 
 Body:
@@ -280,8 +296,6 @@ Body:
 }
 ```
 
-O `CreatorId` é obtido a partir do **JWT**.
-
 ---
 
 ## Listar solicitações
@@ -290,21 +304,19 @@ O `CreatorId` é obtido a partir do **JWT**.
 GET /api/v1/advance-requests
 ```
 
-Requer autenticação.
-
-### Regras
+Regras:
 
 Creator:
 
-* lista apenas suas solicitações
+* vê apenas suas solicitações
 
 Admin:
 
-* lista todas as solicitações
+* vê todas
 
 ---
 
-### Filtros suportados
+### Filtros
 
 ```
 status
@@ -323,32 +335,20 @@ GET /api/v1/advance-requests?status=Pending
 
 ## Aprovar solicitação
 
-Apenas **Admin**.
+Admin:
 
 ```
 POST /api/v1/advance-requests/{id}/approve
-```
-
-Resposta:
-
-```
-204 NoContent
 ```
 
 ---
 
 ## Rejeitar solicitação
 
-Apenas **Admin**.
+Admin:
 
 ```
 POST /api/v1/advance-requests/{id}/reject
-```
-
-Resposta:
-
-```
-204 NoContent
 ```
 
 ---
@@ -361,38 +361,11 @@ Resposta:
 POST /api/v1/auth/login
 ```
 
-Creator:
-
-```json
-{
-  "role": "Creator",
-  "creatorId": "11111111-1111-1111-1111-111111111111"
-}
-```
-
----
-
 2. Criar solicitação
 
 ```
 POST /api/v1/advance-requests
 ```
-
-Header:
-
-```
-Authorization: Bearer TOKEN
-```
-
-Body:
-
-```json
-{
-  "grossAmount": 1000
-}
-```
-
----
 
 3. Listar solicitações
 
@@ -400,53 +373,62 @@ Body:
 GET /api/v1/advance-requests
 ```
 
-Header:
-
-```
-Authorization: Bearer TOKEN
-```
-
----
-
-4. Aprovar solicitação (Admin)
+4. Aprovar ou rejeitar
 
 ```
 POST /api/v1/advance-requests/{id}/approve
 ```
 
-Header:
+---
+
+# Postman
+
+Para facilitar testes da API, o projeto inclui:
+
+* Collection do Postman
+* Variáveis de ambiente
+
+Arquivos incluídos:
 
 ```
-Authorization: Bearer TOKEN_ADMIN
+postman/
+ ├─ AdvanceRequests.postman_collection.json
+ └─ AdvanceRequests.postman_environment.json
 ```
 
 ---
 
-# Regras de negócio
+## Importar no Postman
 
-* Valor mínimo da solicitação deve ser **maior que 100**
-* Taxa de adiantamento: **5%**
-* Apenas **uma solicitação pendente por creator**
-* Estados possíveis:
+1. Abrir Postman
+2. Clique em **Import**
+3. Importar:
 
 ```
-Pending
-Approved
-Rejected
+AdvanceRequests.postman_collection.json
 ```
+
+4. Importar também:
+
+```
+AdvanceRequests.postman_environment.json
+```
+
+5. Selecionar o environment.
 
 ---
 
-# Validação
+## Variáveis do ambiente
 
-A API utiliza **FluentValidation** para validação de entrada.
+```
+base_url = http://localhost:8080
+creator_token
+admin_token
+request_id
+creator_id
+```
 
-Exemplos:
-
-* valor maior que zero
-* campos obrigatórios
-
-As regras de negócio permanecem no **Domain**.
+O login gera automaticamente os tokens.
 
 ---
 
@@ -478,7 +460,7 @@ http://localhost:8080/swagger
 
 ---
 
-### RabbitMQ Management
+### RabbitMQ
 
 ```
 http://localhost:15672
@@ -521,12 +503,7 @@ dotnet test tests/AdvanceRequests.UnitTests
 
 ## Testes de integração
 
-Validam o comportamento da aplicação completa:
-
-* autenticação
-* autorização
-* regras de negócio
-* persistência
+Validam comportamento completo da API.
 
 Executar:
 
@@ -543,11 +520,10 @@ Possíveis evoluções:
 * Observabilidade (OpenTelemetry)
 * Métricas (Prometheus)
 * Retry policy no Outbox Worker
-* Dead Letter Queues
+* Dead Letter Queue
 * Idempotência de consumidores
 * Rate limiting
-* Autenticação real com Identity
-* Circuit breaker para integrações externas
+* Autenticação com Identity
 
 ---
 
