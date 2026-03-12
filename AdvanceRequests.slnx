@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AdvanceRequests.Api/AdvanceRequests.Api.csproj" />
+    <Project Path="src/AdvanceRequests.Application/AdvanceRequests.Application.csproj" />
+    <Project Path="src/AdvanceRequests.Domain/AdvanceRequests.Domain.csproj" />
+    <Project Path="src/AdvanceRequests.Infrastructure/AdvanceRequests.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AdvanceRequests.IntegrationTests/AdvanceRequests.IntegrationTests.csproj" />
+    <Project Path="tests/AdvanceRequests.UnitTests/AdvanceRequests.UnitTests.csproj" />
+  </Folder>
+</Solution>
