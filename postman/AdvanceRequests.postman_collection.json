@@ -1,0 +1,800 @@
+{
+	"info": {
+		"_postman_id": "f30cd9e4-44c8-4a25-8529-a4f1e83df1a4",
+		"name": "My Collection",
+		"description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "53155213",
+		"_collection_link": "https://thales-galter-1985060.postman.co/workspace/Thales-Walter's-Workspace~e545c8f7-1668-4d91-873a-89e4a3897b8d/collection/53155213-f30cd9e4-44c8-4a25-8529-a4f1e83df1a4?action=share&source=collection_link&creator=53155213"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"item": [
+				{
+					"name": "Login - Admin",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role\": \"Admin\"\n  }"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Creator",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role\": \"Creator\",\n    \"creatorId\": \"11111111-1111-1111-1111-111111111111\"\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "advance-requests",
+			"item": [
+				{
+					"name": "Simular - Creator",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{creator_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/advance-requests/simulate?amount=1000",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"advance-requests",
+								"simulate"
+							],
+							"query": [
+								{
+									"key": "amount",
+									"value": "1000"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar - Creator",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const baseUrl = pm.environment.get(\"base_url\");",
+									"const creatorId = pm.environment.get(\"creator_id\");",
+									"",
+									"// Se já existir token válido, reutiliza",
+									"if (pm.environment.get(\"creator_token\")) {",
+									"    return;",
+									"}",
+									"",
+									"pm.sendRequest({",
+									"    url: `${baseUrl}/api/v1/auth/login`,",
+									"    method: \"POST\",",
+									"    header: {",
+									"        \"Content-Type\": \"application/json\"",
+									"    },",
+									"    body: {",
+									"        mode: \"raw\",",
+									"        raw: JSON.stringify({",
+									"            role: \"Creator\",",
+									"            creatorId: creatorId",
+									"        })",
+									"    }",
+									"}, function (err, res) {",
+									"",
+									"    if (err) {",
+									"        console.log(\"Erro no login:\", err);",
+									"        return;",
+									"    }",
+									"",
+									"    const json = res.json();",
+									"",
+									"    pm.environment.set(\"creator_token\", json.accessToken);",
+									"",
+									"    console.log(\"Token Creator obtido\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{creator_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer TOKEN_CREATOR"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"grossAmount\": 1000\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/advance-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"advance-requests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar - Creator",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const baseUrl = pm.environment.get(\"base_url\");",
+									"const creatorId = pm.environment.get(\"creator_id\");",
+									"",
+									"// Se já existir token válido, reutiliza",
+									"if (pm.environment.get(\"creator_token\")) {",
+									"    return;",
+									"}",
+									"",
+									"pm.sendRequest({",
+									"    url: `${baseUrl}/api/v1/auth/login`,",
+									"    method: \"POST\",",
+									"    header: {",
+									"        \"Content-Type\": \"application/json\"",
+									"    },",
+									"    body: {",
+									"        mode: \"raw\",",
+									"        raw: JSON.stringify({",
+									"            role: \"Creator\",",
+									"            creatorId: creatorId",
+									"        })",
+									"    }",
+									"}, function (err, res) {",
+									"",
+									"    if (err) {",
+									"        console.log(\"Erro no login:\", err);",
+									"        return;",
+									"    }",
+									"",
+									"    const json = res.json();",
+									"",
+									"    pm.environment.set(\"creator_token\", json.accessToken);",
+									"",
+									"    console.log(\"Token Creator obtido\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{creator_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer TOKEN_CREATOR"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/advance-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"advance-requests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar - Admin",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const baseUrl = pm.environment.get(\"base_url\");",
+									"",
+									"// Reutiliza token se já existir",
+									"if (pm.environment.get(\"admin_token\")) {",
+									"    return;",
+									"}",
+									"",
+									"pm.sendRequest({",
+									"    url: `${baseUrl}/api/v1/auth/login`,",
+									"    method: \"POST\",",
+									"    header: {",
+									"        \"Content-Type\": \"application/json\"",
+									"    },",
+									"    body: {",
+									"        mode: \"raw\",",
+									"        raw: JSON.stringify({",
+									"            role: \"Admin\"",
+									"        })",
+									"    }",
+									"}, function (err, res) {",
+									"",
+									"    if (err) {",
+									"        console.log(\"Erro no login Admin:\", err);",
+									"        return;",
+									"    }",
+									"",
+									"    const json = res.json();",
+									"",
+									"    pm.environment.set(\"admin_token\", json.accessToken);",
+									"",
+									"    console.log(\"Token Admin obtido\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer TOKEN_ADMIN"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/advance-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"advance-requests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar status",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const baseUrl = pm.environment.get(\"base_url\");",
+									"",
+									"// Reutiliza token se já existir",
+									"if (pm.environment.get(\"admin_token\")) {",
+									"    return;",
+									"}",
+									"",
+									"pm.sendRequest({",
+									"    url: `${baseUrl}/api/v1/auth/login`,",
+									"    method: \"POST\",",
+									"    header: {",
+									"        \"Content-Type\": \"application/json\"",
+									"    },",
+									"    body: {",
+									"        mode: \"raw\",",
+									"        raw: JSON.stringify({",
+									"            role: \"Admin\"",
+									"        })",
+									"    }",
+									"}, function (err, res) {",
+									"",
+									"    if (err) {",
+									"        console.log(\"Erro no login Admin:\", err);",
+									"        return;",
+									"    }",
+									"",
+									"    const json = res.json();",
+									"",
+									"    pm.environment.set(\"admin_token\", json.accessToken);",
+									"",
+									"    console.log(\"Token Admin obtido\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer TOKEN_ADMIN"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/advance-requests?status=Pending",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"advance-requests"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "Pending"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Creator",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const baseUrl = pm.environment.get(\"base_url\");",
+									"",
+									"// Reutiliza token se já existir",
+									"if (pm.environment.get(\"admin_token\")) {",
+									"    return;",
+									"}",
+									"",
+									"pm.sendRequest({",
+									"    url: `${baseUrl}/api/v1/auth/login`,",
+									"    method: \"POST\",",
+									"    header: {",
+									"        \"Content-Type\": \"application/json\"",
+									"    },",
+									"    body: {",
+									"        mode: \"raw\",",
+									"        raw: JSON.stringify({",
+									"            role: \"Admin\"",
+									"        })",
+									"    }",
+									"}, function (err, res) {",
+									"",
+									"    if (err) {",
+									"        console.log(\"Erro no login Admin:\", err);",
+									"        return;",
+									"    }",
+									"",
+									"    const json = res.json();",
+									"",
+									"    pm.environment.set(\"admin_token\", json.accessToken);",
+									"",
+									"    console.log(\"Token Admin obtido\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer TOKEN_ADMIN"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/advance-requests?creatorId=11111111-1111-1111-1111-111111111111",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"advance-requests"
+							],
+							"query": [
+								{
+									"key": "creatorId",
+									"value": "11111111-1111-1111-1111-111111111111"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Data",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const baseUrl = pm.environment.get(\"base_url\");",
+									"",
+									"// Reutiliza token se já existir",
+									"if (pm.environment.get(\"admin_token\")) {",
+									"    return;",
+									"}",
+									"",
+									"pm.sendRequest({",
+									"    url: `${baseUrl}/api/v1/auth/login`,",
+									"    method: \"POST\",",
+									"    header: {",
+									"        \"Content-Type\": \"application/json\"",
+									"    },",
+									"    body: {",
+									"        mode: \"raw\",",
+									"        raw: JSON.stringify({",
+									"            role: \"Admin\"",
+									"        })",
+									"    }",
+									"}, function (err, res) {",
+									"",
+									"    if (err) {",
+									"        console.log(\"Erro no login Admin:\", err);",
+									"        return;",
+									"    }",
+									"",
+									"    const json = res.json();",
+									"",
+									"    pm.environment.set(\"admin_token\", json.accessToken);",
+									"",
+									"    console.log(\"Token Admin obtido\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer TOKEN_ADMIN"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/advance-requests?fromDate=2026-01-01",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"advance-requests"
+							],
+							"query": [
+								{
+									"key": "fromDate",
+									"value": "2026-01-01"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Aprovar",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const baseUrl = pm.environment.get(\"base_url\");",
+									"",
+									"// Reutiliza token se já existir",
+									"if (pm.environment.get(\"admin_token\")) {",
+									"    return;",
+									"}",
+									"",
+									"pm.sendRequest({",
+									"    url: `${baseUrl}/api/v1/auth/login`,",
+									"    method: \"POST\",",
+									"    header: {",
+									"        \"Content-Type\": \"application/json\"",
+									"    },",
+									"    body: {",
+									"        mode: \"raw\",",
+									"        raw: JSON.stringify({",
+									"            role: \"Admin\"",
+									"        })",
+									"    }",
+									"}, function (err, res) {",
+									"",
+									"    if (err) {",
+									"        console.log(\"Erro no login Admin:\", err);",
+									"        return;",
+									"    }",
+									"",
+									"    const json = res.json();",
+									"",
+									"    pm.environment.set(\"admin_token\", json.accessToken);",
+									"",
+									"    console.log(\"Token Admin obtido\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer TOKEN_ADMIN"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/advance-requests/{ID}/approve",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"advance-requests",
+								"{ID}",
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Rejeitar",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const baseUrl = pm.environment.get(\"base_url\");",
+									"",
+									"// Reutiliza token se já existir",
+									"if (pm.environment.get(\"admin_token\")) {",
+									"    return;",
+									"}",
+									"",
+									"pm.sendRequest({",
+									"    url: `${baseUrl}/api/v1/auth/login`,",
+									"    method: \"POST\",",
+									"    header: {",
+									"        \"Content-Type\": \"application/json\"",
+									"    },",
+									"    body: {",
+									"        mode: \"raw\",",
+									"        raw: JSON.stringify({",
+									"            role: \"Admin\"",
+									"        })",
+									"    }",
+									"}, function (err, res) {",
+									"",
+									"    if (err) {",
+									"        console.log(\"Erro no login Admin:\", err);",
+									"        return;",
+									"    }",
+									"",
+									"    const json = res.json();",
+									"",
+									"    pm.environment.set(\"admin_token\", json.accessToken);",
+									"",
+									"    console.log(\"Token Admin obtido\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer TOKEN_ADMIN"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/advance-requests/{ID}/reject",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"advance-requests",
+								"{ID}",
+								"reject"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
